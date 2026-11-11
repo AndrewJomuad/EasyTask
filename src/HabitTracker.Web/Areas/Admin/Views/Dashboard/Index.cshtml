@@ -1,0 +1,184 @@
+@model HabitTracker.Web.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin overview";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Administration</h1>
+        <p>Platform health, user activity and system configuration.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-controller="Activity" asp-action="Index"><i class="bi bi-clock-history me-1"></i>Activity logs</a>
+        <a class="btn btn-primary" asp-controller="Settings" asp-action="Index"><i class="bi bi-sliders me-1"></i>Settings</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#1D4ED8;--stat-bg:#EFF6FF">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-value">@Model.TotalUsers</div>
+            <div class="stat-label">Registered users</div>
+            <div class="stat-meta">@Model.ActiveUsers active</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#16A34A;--stat-bg:#F0FDF4">
+            <div class="stat-icon"><i class="bi bi-list-task"></i></div>
+            <div class="stat-value">@Model.TotalHabits</div>
+            <div class="stat-label">Habits created</div>
+            <div class="stat-meta">@Model.ActiveHabits active</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#0EA5E9;--stat-bg:#F0F9FF">
+            <div class="stat-icon"><i class="bi bi-check2-all"></i></div>
+            <div class="stat-value">@Model.TotalLogs</div>
+            <div class="stat-label">Habit records</div>
+            <div class="stat-meta">@Model.LogsToday recorded today</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#7C3AED;--stat-bg:#F5F3FF">
+            <div class="stat-icon"><i class="bi bi-gem"></i></div>
+            <div class="stat-value">@Model.TotalPointsAwarded</div>
+            <div class="stat-label">Points awarded</div>
+            <div class="stat-meta">@Model.TotalAchievements achievements defined</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-bar-chart-line text-primary"></i><span>Platform activity (7 days)</span></div>
+            <div class="card-body">
+                <div class="chart-box h-260"><canvas id="platformChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-tags text-primary"></i><span>Habits by category</span></div>
+            <div class="card-body">
+                @if (Model.CategoryUsage.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">No habits created yet.</p>
+                }
+                else
+                {
+                    foreach (var c in Model.CategoryUsage)
+                    {
+                        var max = Model.CategoryUsage.Max(x => x.Scheduled);
+                        var pct = max == 0 ? 0 : c.Scheduled * 100.0 / max;
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between" style="font-size:.8rem">
+                                <span>@c.Name</span><span class="fw-semibold">@c.Scheduled</span>
+                            </div>
+                            <div class="progress progress-thin">
+                                <div class="progress-bar" style="width:@pct.ToString("0.#")%;background:@c.Color"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-person-plus text-primary"></i><span>Newest users</span>
+                <a class="ms-auto small" asp-controller="Users" asp-action="Index">All users →</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead><tr><th>User</th><th>Role</th><th class="text-center">Habits</th></tr></thead>
+                        <tbody>
+                            @foreach (var row in Model.NewestUsers)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@row.User.FullName</div>
+                                        <div class="text-muted" style="font-size:.74rem">@@@row.User.UserName</div>
+                                    </td>
+                                    <td><span class="badge badge-soft @(row.Role == AppRoles.Admin ? "badge-soft-primary" : "badge-soft-muted")">@row.Role</span></td>
+                                    <td class="text-center">@row.HabitCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-clock-history text-primary"></i><span>Recent system activity</span>
+                <a class="ms-auto small" asp-controller="Activity" asp-action="Index">View all →</a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentActivity.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">No activity recorded.</p>
+                }
+                else
+                {
+                    <div class="timeline">
+                        @foreach (var log in Model.RecentActivity)
+                        {
+                            <div class="timeline-item">
+                                <div class="t-title">@log.Action</div>
+                                <div class="t-meta">@log.Details</div>
+                                <div class="t-meta">
+                                    @(log.User?.UserName ?? "system") · @log.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var el = document.getElementById('platformChart');
+        if (!el) return;
+
+        var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlatformWeekly.Select(w => w.Label)));
+        var data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlatformWeekly.Select(w => w.Completed)));
+
+        new Chart(el, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Records created',
+                    data: data,
+                    borderColor: '#1D4ED8',
+                    backgroundColor: 'rgba(29,78,216,.10)',
+                    fill: true,
+                    tension: .35,
+                    borderWidth: 2,
+                    pointRadius: 3
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#F1F5F9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    })();
+</script>
+}

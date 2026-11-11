@@ -1,0 +1,114 @@
+@model HabitTracker.Web.ViewModels.RewardsViewModel
+@{
+    ViewData["Title"] = "Rewards";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Rewards</h1>
+        <p>Points you have earned from habits and achievements, and what you have redeemed.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" asp-action="Redeem">
+            <i class="bi bi-gift me-1"></i>Redeem points
+        </a>
+        <a class="btn btn-outline-secondary" asp-controller="Achievements" asp-action="Index">
+            <i class="bi bi-trophy me-1"></i>Achievements
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-coin"></i></div>
+                <div class="stat-value">@Model.TotalPoints.ToString("N0")</div>
+                <div class="stat-label">Current balance</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-arrow-down-circle"></i></div>
+                <div class="stat-value">@Model.LifetimeEarned.ToString("N0")</div>
+                <div class="stat-label">Lifetime earned</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-arrow-up-circle"></i></div>
+                <div class="stat-value">@Model.LifetimeSpent.ToString("N0")</div>
+                <div class="stat-label">Lifetime spent</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-list-check"></i></div>
+                <div class="stat-value">@Model.TransactionCount.ToString("N0")</div>
+                <div class="stat-label">Transactions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Transaction history</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Filter transactions">
+            <a class="btn @(string.IsNullOrEmpty(Model.Filter) ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Index">All</a>
+            <a class="btn @(Model.Filter == "earned" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Index" asp-route-filter="earned">Earned</a>
+            <a class="btn @(Model.Filter == "spent" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Index" asp-route-filter="spent">Spent</a>
+        </div>
+    </div>
+
+    @if (!Model.Transactions.Any())
+    {
+        <div class="card-body empty-state">
+            <i class="bi bi-coin"></i>
+            <h3>No transactions yet</h3>
+            <p>Complete a habit to earn your first points.</p>
+            <a class="btn btn-primary" asp-controller="Tracker" asp-action="Index">
+                <i class="bi bi-check2-square me-1"></i>Open tracker
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th class="d-none d-md-table-cell">Habit</th>
+                        <th class="text-end">Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Transactions)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@t.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                            <td>@t.Reason</td>
+                            <td class="d-none d-md-table-cell text-muted">@(t.HabitName ?? "—")</td>
+                            <td class="text-end">
+                                <span class="badge @(t.IsCredit ? "text-bg-success" : "text-bg-danger")">
+                                    @(t.IsCredit ? "+" : "")@t.PointsChange.ToString("N0")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

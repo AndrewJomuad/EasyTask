@@ -1,0 +1,344 @@
+@model HabitTracker.Web.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    var firstName = Model.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? Model.FullName;
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>@greeting, @firstName 👋</h1>
+        <p>@Model.Today.ToString("dddd, dd MMMM yyyy") · @(Model.ScheduledToday == 0 ? "No habits scheduled today" : $"{Model.PendingToday} habit(s) still pending")</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-controller="Habits" asp-action="Create">
+            <i class="bi bi-plus-lg me-1"></i>New habit
+        </a>
+        <a class="btn btn-primary" asp-controller="Tracker" asp-action="Index">
+            <i class="bi bi-check2-circle me-1"></i>Open tracker
+        </a>
+    </div>
+</div>
+
+@if (ViewBag.DueReminders is List<HabitTracker.Web.ViewModels.ReminderRow> due && due.Count > 0)
+{
+    <div class="alert alert-warning d-flex align-items-start gap-2">
+        <i class="bi bi-bell-fill mt-1"></i>
+        <div class="flex-grow-1">
+            <strong>Reminder@(due.Count > 1 ? "s" : "") due now:</strong>
+            @string.Join(", ", due.Select(d => d.HabitName))
+            <div class="mt-1"><a asp-controller="Tracker" asp-action="Index" class="fw-semibold">Open today's tracker →</a></div>
+        </div>
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#1D4ED8;--stat-bg:#EFF6FF">
+            <div class="stat-icon"><i class="bi bi-list-task"></i></div>
+            <div class="stat-value">@Model.ActiveHabits</div>
+            <div class="stat-label">Active habits</div>
+            <div class="stat-meta">@Model.ScheduledToday scheduled today</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#16A34A;--stat-bg:#F0FDF4">
+            <div class="stat-icon"><i class="bi bi-check2-all"></i></div>
+            <div class="stat-value">@Model.CompletedToday<span class="text-muted" style="font-size:1rem">/@Model.ScheduledToday</span></div>
+            <div class="stat-label">Completed today</div>
+            <div class="stat-meta">@Model.PendingToday pending · @Model.SkippedToday skipped</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#EA580C;--stat-bg:#FFF7ED">
+            <div class="stat-icon"><i class="bi bi-fire"></i></div>
+            <div class="stat-value">@Model.CurrentDayStreak</div>
+            <div class="stat-label">Day streak</div>
+            <div class="stat-meta">Longest habit streak: @Model.LongestStreak days</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#7C3AED;--stat-bg:#F5F3FF">
+            <div class="stat-icon"><i class="bi bi-gem"></i></div>
+            <div class="stat-value">@Model.TotalPoints</div>
+            <div class="stat-label">Total points</div>
+            <div class="stat-meta">@Model.AchievementsEarned of @Model.AchievementsAvailable achievements</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-check2-circle text-primary"></i>
+                <span>Today's habits</span>
+                <span class="badge badge-soft badge-soft-primary ms-auto">@Model.TodayCompletionRate.ToString("0.#")% complete</span>
+            </div>
+            <div class="card-body">
+                @if (Model.TodayHabits.Count == 0)
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-calendar-x"></i>
+                        <h3>No habits scheduled today</h3>
+                        <p>Create a habit or adjust a schedule to see it here.</p>
+                        <a class="btn btn-primary btn-sm" asp-controller="Habits" asp-action="Create">Create a habit</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="progress mb-3" role="progressbar" aria-valuenow="@Model.TodayCompletionRate" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar bg-success" style="width:@Model.TodayCompletionRate%"></div>
+                    </div>
+
+                    @foreach (var item in Model.TodayHabits)
+                    {
+                        var rowClass = item.Status == HabitLogStatus.Completed ? "is-done"
+                                     : item.Status == HabitLogStatus.Skipped ? "is-skipped" : "";
+                        <div class="habit-row @rowClass">
+                            <span class="habit-icon" style="background:@item.Color"><i class="bi @item.Icon"></i></span>
+                            <div class="flex-grow-1" style="min-width:0">
+                                <p class="habit-name text-truncate">@item.Name</p>
+                                <div class="habit-meta">
+                                    <span><i class="bi bi-tag me-1"></i>@item.CategoryName</span>
+                                    @if (item.CurrentStreak > 0)
+                                    {
+                                        <span class="streak-pill"><i class="bi bi-fire"></i>@item.CurrentStreak day streak</span>
+                                    }
+                                    @if (item.Status == HabitLogStatus.Completed)
+                                    {
+                                        <span class="badge badge-soft badge-soft-success">Completed</span>
+                                    }
+                                    else if (item.Status == HabitLogStatus.Skipped)
+                                    {
+                                        <span class="badge badge-soft badge-soft-warning">Skipped</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="habit-actions d-flex gap-1">
+                                @if (item.Status is null)
+                                {
+                                    <form asp-controller="Tracker" asp-action="Record" method="post" data-tracker-form>
+                                        <input type="hidden" name="habitId" value="@item.HabitId" />
+                                        <input type="hidden" name="date" value="@Model.Today.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="status" value="@((int)HabitLogStatus.Completed)" />
+                                        <button type="submit" class="btn btn-sm btn-success" title="Mark completed">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-controller="Tracker" asp-action="Record" method="post" data-tracker-form>
+                                        <input type="hidden" name="habitId" value="@item.HabitId" />
+                                        <input type="hidden" name="date" value="@Model.Today.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="status" value="@((int)HabitLogStatus.Skipped)" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark skipped">
+                                            <i class="bi bi-slash-circle"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-sm btn-outline-primary" asp-controller="Tracker" asp-action="Index" asp-route-date="@Model.Today.ToString("yyyy-MM-dd")">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-activity text-primary"></i><span>Today's progress</span></div>
+            <div class="card-body text-center">
+                <div class="htms-ring mx-auto mb-3" style="--pct:@Model.TodayCompletionRate">
+                    <span>@Model.TodayCompletionRate.ToString("0.#")%</span>
+                </div>
+                <div class="row text-center g-2">
+                    <div class="col-4">
+                        <div class="fw-bold">@Model.CompletedToday</div>
+                        <div class="text-muted" style="font-size:.72rem">Done</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold">@Model.PendingToday</div>
+                        <div class="text-muted" style="font-size:.72rem">Pending</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold">@Model.SkippedToday</div>
+                        <div class="text-muted" style="font-size:.72rem">Skipped</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-bell text-primary"></i><span>Upcoming reminders</span></div>
+            <div class="card-body">
+                @if (Model.UpcomingReminders.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">No reminders configured.</p>
+                }
+                else
+                {
+                    foreach (var r in Model.UpcomingReminders)
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge badge-soft badge-soft-primary">@r.ReminderTime.ToString("HH:mm")</span>
+                            <span class="text-truncate" style="font-size:.85rem">@r.Habit?.Name</span>
+                        </div>
+                    }
+                    <a class="btn btn-sm btn-outline-primary w-100 mt-2" asp-controller="Reminders" asp-action="Index">Manage reminders</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-bar-chart-line text-primary"></i><span>Weekly progress</span>
+                <a class="ms-auto small" asp-controller="Analytics" asp-action="Index">View analytics →</a>
+            </div>
+            <div class="card-body">
+                <div class="chart-box h-260"><canvas id="weeklyChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-fire text-warning"></i><span>Top streaks</span></div>
+            <div class="card-body">
+                @if (Model.TopStreaks.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">No active habits yet.</p>
+                }
+                else
+                {
+                    foreach (var s in Model.TopStreaks)
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="habit-icon" style="background:@s.Color;width:34px;height:34px;flex:0 0 34px;font-size:.95rem">
+                                <i class="bi @s.Icon"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-truncate" style="font-size:.85rem;font-weight:600">@s.Name</span>
+                                    <span class="streak-pill"><i class="bi bi-fire"></i>@s.Current</span>
+                                </div>
+                                <div class="progress progress-thin mt-1">
+                                    <div class="progress-bar" style="width:@s.CompletionRate%;background:@s.Color"></div>
+                                </div>
+                                <div class="text-muted" style="font-size:.7rem">@s.CompletionRate.ToString("0.#")% completion · best @s.Longest days</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-trophy text-warning"></i><span>Recent achievements</span></div>
+            <div class="card-body">
+                @if (Model.RecentAchievements.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">Complete habits to unlock your first badge.</p>
+                }
+                else
+                {
+                    foreach (var a in Model.RecentAchievements)
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="habit-icon" style="background:@a.Color;width:32px;height:32px;flex:0 0 32px;font-size:.9rem">
+                                <i class="bi @a.Icon"></i>
+                            </span>
+                            <div style="min-width:0">
+                                <div class="text-truncate" style="font-size:.85rem;font-weight:600">@a.Name</div>
+                                <div class="text-muted text-truncate" style="font-size:.72rem">@a.Description</div>
+                            </div>
+                        </div>
+                    }
+                    <a class="btn btn-sm btn-outline-primary w-100 mt-2" asp-controller="Achievements" asp-action="Index">All achievements</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-clock-history text-primary"></i><span>Recent activity</span></div>
+            <div class="card-body">
+                @if (Model.RecentActivity.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">No activity recorded yet.</p>
+                }
+                else
+                {
+                    <div class="timeline">
+                        @foreach (var log in Model.RecentActivity)
+                        {
+                            <div class="timeline-item">
+                                <div class="t-title">@log.Action</div>
+                                <div class="t-meta">@log.Details</div>
+                                <div class="t-meta">@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeeklyProgress.Select(w => w.Label)));
+        var scheduled = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeeklyProgress.Select(w => w.Scheduled)));
+        var completed = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeeklyProgress.Select(w => w.Completed)));
+
+        var el = document.getElementById('weeklyChart');
+        if (!el) return;
+
+        new Chart(el, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Scheduled',
+                        data: scheduled,
+                        backgroundColor: 'rgba(29,78,216,.14)',
+                        borderColor: 'rgba(29,78,216,.35)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: .62
+                    },
+                    {
+                        label: 'Completed',
+                        data: completed,
+                        backgroundColor: '#1D4ED8',
+                        borderRadius: 6,
+                        barPercentage: .62
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#F1F5F9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    })();
+</script>
+}

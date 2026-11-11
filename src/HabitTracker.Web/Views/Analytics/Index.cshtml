@@ -1,0 +1,307 @@
+@model HabitTracker.Web.ViewModels.AnalyticsViewModel
+@{
+    ViewData["Title"] = "Analytics";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Analytics</h1>
+        <p>@Model.From.ToString("dd MMM yyyy") — @Model.To.ToString("dd MMM yyyy")</p>
+    </div>
+    <a class="btn btn-outline-primary" asp-controller="Reports" asp-action="Index"
+       asp-route-range="@Model.Range" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")">
+        <i class="bi bi-file-earmark-bar-graph me-1"></i>Reports
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="rangeSelect">Range</label>
+                <select class="form-select" id="rangeSelect" name="range">
+                    <option value="7" selected="@(Model.Range == "7")">Last 7 days</option>
+                    <option value="30" selected="@(Model.Range == "30")">Last 30 days</option>
+                    <option value="90" selected="@(Model.Range == "90")">Last 90 days</option>
+                    <option value="365" selected="@(Model.Range == "365")">Last 12 months</option>
+                    <option value="custom" selected="@(Model.Range == "custom")">Custom</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2" id="customRange">
+                <label class="form-label" for="from">From</label>
+                <input class="form-control" type="date" id="from" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-md-2" id="customRange2">
+                <label class="form-label" for="to">To</label>
+                <input class="form-control" type="date" id="to" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="habitId">Habit</label>
+                <select class="form-select" id="habitId" name="habitId">
+                    <option value="">All habits</option>
+                    @foreach (var h in Model.Habits)
+                    {
+                        <option value="@h.Id" selected="@(Model.HabitId == h.Id)">@h.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="categoryId">Category</label>
+                <select class="form-select" id="categoryId" name="categoryId">
+                    <option value="">All</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-1">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#1D4ED8;--stat-bg:#EFF6FF">
+            <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-value">@Model.TotalScheduled</div>
+            <div class="stat-label">Scheduled opportunities</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#16A34A;--stat-bg:#F0FDF4">
+            <div class="stat-icon"><i class="bi bi-check2-all"></i></div>
+            <div class="stat-value">@Model.TotalCompleted</div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-meta">@Model.TotalSkipped skipped · @Model.TotalMissed missed</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#0EA5E9;--stat-bg:#F0F9FF">
+            <div class="stat-icon"><i class="bi bi-speedometer2"></i></div>
+            <div class="stat-value">@Model.CompletionRate.ToString("0.#")%</div>
+            <div class="stat-label">Completion rate</div>
+            <div class="stat-meta">@Model.ActiveDays active days</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#EA580C;--stat-bg:#FFF7ED">
+            <div class="stat-icon"><i class="bi bi-fire"></i></div>
+            <div class="stat-value">@Model.BestStreak</div>
+            <div class="stat-label">Best streak</div>
+            <div class="stat-meta">Current: @Model.CurrentStreak days</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-graph-up text-primary"></i><span>Daily completion trend</span></div>
+            <div class="card-body">
+                <div class="chart-box h-300"><canvas id="trendChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-pie-chart text-primary"></i><span>Category share</span></div>
+            <div class="card-body">
+                @if (Model.CategoryBreakdown.Count == 0)
+                {
+                    <p class="text-muted mb-0" style="font-size:.85rem">No data for this range.</p>
+                }
+                else
+                {
+                    <div class="chart-box h-300"><canvas id="categoryChart"></canvas></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-bar-chart text-primary"></i><span>Completion by weekday</span></div>
+            <div class="card-body">
+                <div class="chart-box h-260"><canvas id="weekdayChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-list-ol text-primary"></i><span>Habit comparison</span></div>
+            <div class="card-body p-0">
+                @if (Model.HabitComparison.Count == 0)
+                {
+                    <p class="text-muted p-3 mb-0" style="font-size:.85rem">No habits in this range.</p>
+                }
+                else
+                {
+                    <div class="table-responsive" style="max-height:300px;overflow-y:auto">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr><th>Habit</th><th class="text-center">Done</th><th class="text-center">Rate</th><th class="text-center">Streak</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.HabitComparison.OrderByDescending(r => r.Rate))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="day-dot" style="background:@row.Color"></span>
+                                                <span class="text-truncate" style="max-width:180px">@row.Name</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">@row.Completed/@row.Scheduled</td>
+                                        <td class="text-center fw-semibold">@row.Rate.ToString("0.#")%</td>
+                                        <td class="text-center"><span class="streak-pill"><i class="bi bi-fire"></i>@row.CurrentStreak</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-table text-primary"></i><span>Detailed breakdown</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Habit</th><th>Category</th>
+                        <th class="text-center">Scheduled</th><th class="text-center">Completed</th>
+                        <th class="text-center">Skipped</th><th class="text-center">Missed</th>
+                        <th class="text-center">Rate</th><th class="text-center">Best streak</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.HabitComparison)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@row.Name</td>
+                            <td class="text-muted">@row.CategoryName</td>
+                            <td class="text-center">@row.Scheduled</td>
+                            <td class="text-center text-success fw-semibold">@row.Completed</td>
+                            <td class="text-center text-warning">@row.Skipped</td>
+                            <td class="text-center text-danger">@row.Missed</td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center gap-2 justify-content-center">
+                                    <div class="progress progress-thin" style="width:56px">
+                                        <div class="progress-bar" style="width:@row.Rate%;background:@row.Color"></div>
+                                    </div>
+                                    <span style="font-size:.78rem">@row.Rate.ToString("0.#")%</span>
+                                </div>
+                            </td>
+                            <td class="text-center">@row.LongestStreak</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailySeries.Select(d => d.Label)));
+        var scheduled = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailySeries.Select(d => d.Scheduled)));
+        var completed = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailySeries.Select(d => d.Completed)));
+
+        var trend = document.getElementById('trendChart');
+        if (trend) {
+            new Chart(trend, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Completed',
+                            data: completed,
+                            borderColor: '#1D4ED8',
+                            backgroundColor: 'rgba(29,78,216,.10)',
+                            fill: true,
+                            tension: .35,
+                            pointRadius: labels.length > 40 ? 0 : 3,
+                            pointHoverRadius: 5,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Scheduled',
+                            data: scheduled,
+                            borderColor: '#94A3B8',
+                            borderDash: [5, 4],
+                            fill: false,
+                            tension: .35,
+                            pointRadius: 0,
+                            borderWidth: 1.5
+                        }
+                    ]
+                },
+                options: {
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }
+                    }
+                }
+            });
+        }
+
+        var catEl = document.getElementById('categoryChart');
+        if (catEl) {
+            var catLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryBreakdown.Select(c => c.Name)));
+            var catData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryBreakdown.Select(c => c.Completed)));
+            var catColors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryBreakdown.Select(c => c.Color)));
+
+            new Chart(catEl, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{ data: catData, backgroundColor: catColors, borderWidth: 2, borderColor: '#fff' }]
+                },
+                options: {
+                    cutout: '62%',
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        var wdEl = document.getElementById('weekdayChart');
+        if (wdEl) {
+            var wdLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeekdayBreakdown.Select(w => w.Day)));
+            var wdRates = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WeekdayBreakdown.Select(w => w.Rate)));
+
+            new Chart(wdEl, {
+                type: 'bar',
+                data: {
+                    labels: wdLabels,
+                    datasets: [{
+                        label: 'Completion rate %',
+                        data: wdRates,
+                        backgroundColor: '#38BDF8',
+                        borderRadius: 6,
+                        barPercentage: .6
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { callback: function (v) { return v + '%'; } }, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    })();
+</script>
+}

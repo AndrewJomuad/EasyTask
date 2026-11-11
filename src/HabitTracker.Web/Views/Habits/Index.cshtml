@@ -1,0 +1,166 @@
+@model HabitTracker.Web.ViewModels.HabitListViewModel
+@{
+    ViewData["Title"] = "My habits";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>My habits</h1>
+        <p>@Model.ActiveCount active · @Model.InactiveCount inactive</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New habit</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="search">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Name, description or category" />
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="categoryId">Category</label>
+                <select class="form-select" id="categoryId" name="categoryId">
+                    <option value="">All categories</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="active" selected="@(Model.Status == "active")">Active</option>
+                    <option value="inactive" selected="@(Model.Status == "inactive")">Inactive</option>
+                    <option value="all" selected="@(Model.Status == "all")">All</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Habits.Count == 0)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <i class="bi bi-list-task"></i>
+                <h3>No habits found</h3>
+                <p>@(string.IsNullOrWhiteSpace(Model.Search) ? "Create your first habit to start tracking." : "No habits match your filters.")</p>
+                <a class="btn btn-primary" asp-action="Create">Create a habit</a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var item in Model.Habits)
+        {
+            var h = item.Habit;
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <span class="habit-icon" style="background:@h.Color"><i class="bi @h.Icon"></i></span>
+                            <div class="flex-grow-1" style="min-width:0">
+                                <h2 class="habit-name text-truncate" style="font-size:.98rem">@h.Name</h2>
+                                <div class="habit-meta">
+                                    <span><i class="bi bi-tag me-1"></i>@h.Category?.Name</span>
+                                    @if (!h.IsActive)
+                                    {
+                                        <span class="badge badge-soft badge-soft-muted">Inactive</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" aria-label="Habit actions">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-action="Details" asp-route-id="@h.Id"><i class="bi bi-eye me-2"></i>View details</a></li>
+                                    <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@h.Id"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                                    <li>
+                                        <form asp-action="Toggle" method="post" asp-route-id="@h.Id">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi @(h.IsActive ? "bi-pause-circle" : "bi-play-circle") me-2"></i>
+                                                @(h.IsActive ? "Deactivate" : "Reactivate")
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-action="Delete" method="post" asp-route-id="@h.Id"
+                                              data-confirm="Delete '@h.Name' and all of its history? This cannot be undone.">
+                                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(h.Description))
+                        {
+                            <p class="text-muted mb-2" style="font-size:.82rem">@h.Description</p>
+                        }
+
+                        <div class="d-flex flex-wrap gap-2 mb-3" style="font-size:.75rem">
+                            <span class="badge badge-soft badge-soft-primary"><i class="bi bi-repeat me-1"></i>@item.ScheduleSummary</span>
+                            <span class="badge badge-soft badge-soft-muted"><i class="bi bi-bullseye me-1"></i>Target @h.TargetPerPeriod</span>
+                            @if (item.CurrentStreak > 0)
+                            {
+                                <span class="streak-pill"><i class="bi bi-fire"></i>@item.CurrentStreak</span>
+                            }
+                        </div>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between mb-1" style="font-size:.75rem">
+                                <span class="text-muted">Completion</span>
+                                <span class="fw-semibold">@item.CompletionRate.ToString("0.#")%</span>
+                            </div>
+                            <div class="progress progress-thin mb-3">
+                                <div class="progress-bar" style="width:@item.CompletionRate%;background:@h.Color"></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                @if (item.ScheduledToday && h.IsActive)
+                                {
+                                    if (item.TodayStatus is null)
+                                    {
+                                        <form asp-controller="Tracker" asp-action="Record" method="post" class="flex-grow-1">
+                                            <input type="hidden" name="habitId" value="@h.Id" />
+                                            <input type="hidden" name="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                            <input type="hidden" name="status" value="0" />
+                                            <button type="submit" class="btn btn-sm btn-success w-100"><i class="bi bi-check-lg me-1"></i>Complete</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-soft @(item.TodayStatus == HabitLogStatus.Completed ? "badge-soft-success" : "badge-soft-warning") flex-grow-1 text-center py-2">
+                                            @(item.TodayStatus == HabitLogStatus.Completed ? "Completed today" : "Skipped today")
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge badge-soft badge-soft-muted flex-grow-1 text-center py-2">Not scheduled today</span>
+                                }
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@h.Id" aria-label="Details">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

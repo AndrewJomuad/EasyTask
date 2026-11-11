@@ -1,0 +1,125 @@
+@model HabitTracker.Web.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My profile";
+    var initials = string.Join("", Model.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0])).ToUpperInvariant();
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>My profile</h1>
+        <p>Manage your account details and review your progress summary.</p>
+    </div>
+    <a class="btn btn-outline-primary" asp-action="ChangePassword">
+        <i class="bi bi-key me-1"></i>Change password
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <div class="avatar-circle mx-auto mb-3" style="width:76px;height:76px;font-size:1.5rem">@initials</div>
+                <h2 style="font-size:1.1rem" class="mb-1">@Model.FullName</h2>
+                <div class="text-muted" style="font-size:.85rem">@@@Model.UserName</div>
+                <span class="badge badge-soft badge-soft-primary mt-2">@Model.Role</span>
+
+                <hr class="my-3" />
+
+                <div class="row text-center g-2">
+                    <div class="col-6">
+                        <div class="fw-bold fs-5">@Model.TotalPoints</div>
+                        <div class="text-muted" style="font-size:.72rem">Points</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-bold fs-5">@Model.AchievementsEarned</div>
+                        <div class="text-muted" style="font-size:.72rem">Achievements</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-bold fs-5">@Model.TotalHabits</div>
+                        <div class="text-muted" style="font-size:.72rem">Habits</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-bold fs-5">@Model.TotalCompletions</div>
+                        <div class="text-muted" style="font-size:.72rem">Completions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle text-primary"></i><span>Account</span></div>
+            <div class="card-body" style="font-size:.85rem">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Email</span>
+                    <span class="text-truncate ms-2">@Model.Email</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Member since</span>
+                    <span>@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Last sign-in</span>
+                    <span>@(Model.LastLoginAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "—")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person-gear text-primary"></i><span>Profile details</span></div>
+            <div class="card-body">
+                <form asp-action="Profile" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" readonly />
+                            <div class="form-text">Contact an administrator to change your email.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="UserName" class="form-label"></label>
+                            <input asp-for="UserName" class="form-control" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TimeZoneId" class="form-label"></label>
+                            <select asp-for="TimeZoneId" class="form-select">
+                                <option value="Asia/Singapore">Asia/Singapore (UTC+8)</option>
+                                <option value="Asia/Manila">Asia/Manila (UTC+8)</option>
+                                <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
+                                <option value="Asia/Kolkata">Asia/Kolkata (UTC+5:30)</option>
+                                <option value="Europe/London">Europe/London (UTC+0)</option>
+                                <option value="Europe/Berlin">Europe/Berlin (UTC+1)</option>
+                                <option value="America/New_York">America/New_York (UTC-5)</option>
+                                <option value="America/Los_Angeles">America/Los_Angeles (UTC-8)</option>
+                                <option value="Australia/Sydney">Australia/Sydney (UTC+11)</option>
+                                <option value="UTC">UTC</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Bio" class="form-label"></label>
+                            <textarea asp-for="Bio" class="form-control" rows="3" maxlength="500"
+                                      placeholder="A short note about your goals..."></textarea>
+                            <span asp-validation-for="Bio" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Save changes</button>
+                        <a class="btn btn-outline-secondary" asp-controller="Dashboard" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

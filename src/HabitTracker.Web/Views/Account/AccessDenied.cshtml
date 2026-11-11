@@ -1,0 +1,14 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="text-center">
+    <div class="mb-3" style="font-size:3rem;color:#DC2626"><i class="bi bi-shield-lock"></i></div>
+    <h1>Access denied</h1>
+    <p class="lead">Your account does not have permission to view that page.</p>
+    <div class="d-flex gap-2 justify-content-center">
+        <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index">Go to dashboard</a>
+        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Home</a>
+    </div>
+</div>

@@ -1,0 +1,77 @@
+@model HabitTracker.Web.ViewModels.AdminAchievementsViewModel
+@{
+    ViewData["Title"] = "Achievements";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Achievement definitions</h1>
+        <p>@Model.Achievements.Count badges · @Model.Achievements.Count(a => a.Achievement.IsActive) active</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New achievement</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        @if (Model.Achievements.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="bi bi-trophy"></i>
+                <h3>No achievements</h3>
+                <p>Define badges to reward consistent behaviour.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Badge</th><th>Criteria</th><th class="text-center">Threshold</th>
+                            <th class="text-center">Earned by</th>
+                            <th>Status</th><th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Achievements)
+                        {
+                            var a = row.Achievement;
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="habit-icon" style="background:@a.Color;width:32px;height:32px;flex:0 0 32px;font-size:.9rem">
+                                            <i class="bi @a.Icon"></i>
+                                        </span>
+                                        <div>
+                                            <div class="fw-semibold">@a.Name</div>
+                                            <div class="text-muted" style="font-size:.74rem">@a.Description</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-muted">@a.Criteria</td>
+                                <td class="text-center">@a.PointsRequired</td>
+                                <td class="text-center">@row.EarnedBy</td>
+                                <td>
+                                    <span class="badge badge-soft @(a.IsActive ? "badge-soft-success" : "badge-soft-muted")">
+                                        @(a.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@a.Id" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" method="post" asp-route-id="@a.Id" class="d-inline"
+                                          data-confirm="Delete achievement '@a.Name'?">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,114 @@
+@model HabitTracker.Web.ViewModels.AdminCategoriesViewModel
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Categories</h1>
+        <p>@Model.Categories.Count categories available to all users</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New category</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body p-0">
+                @if (Model.Categories.Count == 0)
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-tags"></i>
+                        <h3>No categories</h3>
+                        <p>Create a category so users can group their habits.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr><th>Category</th><th>Description</th><th class="text-center">Habits</th><th>Status</th><th class="text-end">Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.Categories)
+                                {
+                                    var c = row.Category;
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="habit-icon" style="background:@c.Color;width:30px;height:30px;flex:0 0 30px;font-size:.85rem">
+                                                    <i class="bi @c.Icon"></i>
+                                                </span>
+                                                <span class="fw-semibold">@c.Name</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-muted" style="font-size:.82rem">@(string.IsNullOrWhiteSpace(c.Description) ? "—" : c.Description)</td>
+                                        <td class="text-center">@row.HabitCount</td>
+                                        <td>
+                                            <span class="badge badge-soft @(c.IsActive ? "badge-soft-success" : "badge-soft-muted")">
+                                                @(c.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@c.Id" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form asp-action="Delete" method="post" asp-route-id="@c.Id" class="d-inline"
+                                                  data-confirm="Delete category '@c.Name'?">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-plus-circle text-primary"></i><span>Quick add</span></div>
+            <div class="card-body">
+                <form asp-action="Save" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label" for="Name">Name</label>
+                        <input class="form-control" id="Name" name="Name" maxlength="60" required placeholder="e.g. Health" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Description">Description</label>
+                        <input class="form-control" id="Description" name="Description" maxlength="250" placeholder="Optional" />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label" for="Color">Colour</label>
+                            <input class="form-control form-control-color w-100" type="color" id="Color" name="Color" value="#1D4ED8" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="Icon">Icon</label>
+                            <select class="form-select" id="Icon" name="Icon">
+                                <option value="bi-heart-pulse">Health</option>
+                                <option value="bi-book">Learning</option>
+                                <option value="bi-briefcase">Work</option>
+                                <option value="bi-people">Social</option>
+                                <option value="bi-piggy-bank">Finance</option>
+                                <option value="bi-flower1">Mindfulness</option>
+                                <option value="bi-activity">Fitness</option>
+                                <option value="bi-house">Home</option>
+                            </select>
+                        </div>
+                    </div>
+                    <input type="hidden" name="IsActive" value="true" />
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check2 me-1"></i>Create category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

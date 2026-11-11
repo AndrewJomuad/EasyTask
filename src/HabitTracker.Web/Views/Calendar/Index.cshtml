@@ -1,0 +1,97 @@
+@model HabitTracker.Web.ViewModels.CalendarViewModel
+@{
+    ViewData["Title"] = "Calendar";
+    var dayNames = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Calendar</h1>
+        <p>Completion history for @Model.MonthName</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-year="@Model.PrevYear" asp-route-month="@Model.PrevMonth">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <a class="btn btn-outline-primary btn-sm" asp-action="Index">This month</a>
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-year="@Model.NextYear" asp-route-month="@Model.NextMonth">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#16A34A;--stat-bg:#F0FDF4">
+            <div class="stat-icon"><i class="bi bi-check2-all"></i></div>
+            <div class="stat-value">@Model.TotalCompleted</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#F59E0B;--stat-bg:#FFFBEB">
+            <div class="stat-icon"><i class="bi bi-slash-circle"></i></div>
+            <div class="stat-value">@Model.TotalSkipped</div>
+            <div class="stat-label">Skipped</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#DC2626;--stat-bg:#FEF2F2">
+            <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
+            <div class="stat-value">@Model.TotalMissed</div>
+            <div class="stat-label">Missed</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#7C3AED;--stat-bg:#F5F3FF">
+            <div class="stat-icon"><i class="bi bi-star"></i></div>
+            <div class="stat-value">@Model.PerfectDays</div>
+            <div class="stat-label">Perfect days</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-calendar3 text-primary"></i><span>@Model.MonthName</span>
+        <div class="ms-auto d-flex flex-wrap gap-2" style="font-size:.72rem">
+            <span><span class="day-dot" style="background:#16A34A"></span> Complete</span>
+            <span><span class="day-dot" style="background:#1D4ED8"></span> Partial</span>
+            <span><span class="day-dot" style="background:#F59E0B"></span> Skipped</span>
+            <span><span class="day-dot" style="background:#DC2626"></span> Missed</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="calendar-grid mb-1">
+            @foreach (var name in dayNames)
+            {
+                <div class="calendar-head">@name</div>
+            }
+        </div>
+
+        <div class="calendar-grid">
+            @foreach (var day in Model.Days)
+            {
+                var cls = $"calendar-cell state-{day.State}";
+                if (!day.IsCurrentMonth) cls += " outside";
+                if (day.IsToday) cls += " today";
+
+                <a class="@cls" asp-controller="Tracker" asp-action="Index" asp-route-date="@day.Date.ToString("yyyy-MM-dd")"
+                   title="@day.Date.ToString("dd MMM yyyy") — @day.Completed/@day.Scheduled completed">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="day-num">@day.Date.Day</span>
+                        @if (day.Scheduled > 0)
+                        {
+                            <span class="day-dot" style="background:@(day.State == "complete" ? "#16A34A" : day.State == "partial" ? "#1D4ED8" : day.State == "skipped" ? "#F59E0B" : "#DC2626")"></span>
+                        }
+                    </div>
+                    @if (day.IsCurrentMonth && day.Scheduled > 0)
+                    {
+                        <div style="font-size:.68rem;color:#475569">@day.Completed/@day.Scheduled</div>
+                        <div class="cell-rate">@day.Rate.ToString("0")%</div>
+                    }
+                </a>
+            }
+        </div>
+    </div>
+</div>

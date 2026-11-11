@@ -1,0 +1,160 @@
+@model HabitTracker.Web.ViewModels.HabitFormViewModel
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit habit" : "New habit";
+
+    var colors = new[] { "#1D4ED8", "#0EA5E9", "#16A34A", "#EA580C", "#7C3AED", "#DB2777", "#0F766E", "#F59E0B", "#DC2626", "#475569" };
+    var icons = new[] { "bi-check2-circle", "bi-droplet", "bi-book", "bi-activity", "bi-flower1", "bi-list-check", "bi-piggy-bank", "bi-people", "bi-moon-stars", "bi-sun", "bi-pencil", "bi-cup-hot" };
+    var days = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>@(isEdit ? "Edit habit" : "Create a habit")</h1>
+        <p>@(isEdit ? "Update the details, schedule or status of this habit." : "Define what you want to do, how often, and when it starts.")</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back to habits</a>
+</div>
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" method="post" novalidate>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-info-circle text-primary"></i><span>Habit details</span></div>
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Read 20 pages" autofocus />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="2" maxlength="1000"
+                                  placeholder="Why does this habit matter to you?"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" class="form-select">
+                                <option value="">— Choose a category —</option>
+                                @foreach (var c in Model.Categories)
+                                {
+                                    <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TargetPerPeriod" class="form-label"></label>
+                            <input asp-for="TargetPerPeriod" class="form-control" type="number" min="1" max="100" />
+                            <div class="form-text">A numeric goal, e.g. 8 glasses or 20 pages.</div>
+                            <span asp-validation-for="TargetPerPeriod" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-calendar-week text-primary"></i><span>Schedule</span></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FrequencyType" class="form-label"></label>
+                            <select asp-for="FrequencyType" class="form-select" id="FrequencyType">
+                                <option value="0" selected="@(Model.FrequencyType == FrequencyType.Daily)">Every day</option>
+                                <option value="1" selected="@(Model.FrequencyType == FrequencyType.Weekly)">Specific weekdays</option>
+                                <option value="2" selected="@(Model.FrequencyType == FrequencyType.Custom)">Custom schedule</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="StartDate" class="form-label"></label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="EndDate" class="form-label"></label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div id="scheduleBlock" class="mt-3">
+                        <label class="form-label">Scheduled weekdays</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var day in days)
+                            {
+                                var id = $"day_{day}";
+                                <div class="form-check form-check-inline m-0">
+                                    <input class="form-check-input" type="checkbox" name="SelectedDays" value="@((int)day)"
+                                           id="@id" checked="@Model.SelectedDays.Contains(day)" />
+                                    <label class="form-check-label" for="@id" style="font-size:.85rem">@day.ToString()[..3]</label>
+                                </div>
+                            }
+                        </div>
+                        <div class="form-text">Only these weekdays count as scheduled opportunities for streaks.</div>
+                        <span asp-validation-for="SelectedDays" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-palette text-primary"></i><span>Appearance</span></div>
+                <div class="card-body">
+                    <label class="form-label">Colour</label>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @foreach (var color in colors)
+                        {
+                            <span class="swatch @(Model.Color == color ? "selected" : "")"
+                                  style="background:@color" data-color-swatch="@color" role="button" tabindex="0"
+                                  aria-label="Colour @color"></span>
+                        }
+                    </div>
+                    <input asp-for="Color" type="hidden" />
+
+                    <label class="form-label">Icon</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var icon in icons)
+                        {
+                            <span class="icon-option @(Model.Icon == icon ? "selected" : "")"
+                                  data-icon-option="@icon" role="button" tabindex="0" aria-label="Icon @icon">
+                                <i class="bi @icon"></i>
+                            </span>
+                        }
+                    </div>
+                    <input asp-for="Icon" type="hidden" />
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-toggle-on text-primary"></i><span>Status</span></div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" role="switch" />
+                        <label asp-for="IsActive" class="form-check-label" style="font-size:.88rem">Habit is active</label>
+                    </div>
+                    <div class="form-text">Inactive habits are hidden from the daily tracker but keep their history.</div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2 me-1"></i>@(isEdit ? "Save changes" : "Create habit")
+                </button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,84 @@
+@model HabitTracker.Web.ViewModels.RedeemPointsViewModel
+@{
+    ViewData["Title"] = "Redeem points";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Redeem points</h1>
+        <p>Record a redemption against your balance of <strong>@Model.Balance.ToString("N0")</strong> points.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">
+        <i class="bi bi-arrow-left me-1"></i>Back to rewards
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Redeem" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Points" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-coin"></i></span>
+                            <input asp-for="Points" type="number" min="1" max="@Math.Max(1, Model.Balance)"
+                                   class="form-control" />
+                        </div>
+                        <span asp-validation-for="Points" class="text-danger small"></span>
+                        <div class="form-text">
+                            You can redeem up to @Model.Balance.ToString("N0") points.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label"></label>
+                        <textarea asp-for="Reason" class="form-control" rows="3"
+                                  placeholder="e.g. Redeemed for a movie night"></textarea>
+                        <span asp-validation-for="Reason" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2 me-1"></i>Redeem
+                        </button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <div class="card">
+            <div class="card-header">Recent activity</div>
+            <div class="card-body p-0">
+                @if (!Model.Balance.Equals(0) && Model.Balance > 0)
+                {
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Available balance</span>
+                            <strong>@Model.Balance.ToString("N0") pts</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">After redemption</span>
+                            <strong>@Math.Max(0, Model.Balance - Model.Points).ToString("N0") pts</strong>
+                        </li>
+                    </ul>
+                }
+                else
+                {
+                    <div class="p-3 text-muted small">
+                        You have no points available yet. Complete habits to earn some.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

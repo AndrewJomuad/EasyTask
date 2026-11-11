@@ -1,0 +1,62 @@
+@model HabitTracker.Web.ViewModels.LoginViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Sign in";
+}
+
+<h1>Welcome back</h1>
+<p class="lead">Sign in to continue tracking your habits.</p>
+
+<form asp-action="Login" method="post" novalidate>
+    <input type="hidden" asp-for="ReturnUrl" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="UserNameOrEmail" class="form-label"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+            <input asp-for="UserNameOrEmail" class="form-control" autocomplete="username" autofocus
+                   placeholder="username or you@example.com" />
+        </div>
+        <span asp-validation-for="UserNameOrEmail" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+            <input asp-for="Password" class="form-control" autocomplete="current-password" placeholder="Your password" />
+            <button class="btn btn-outline-secondary" type="button" data-toggle-password="#Password" aria-label="Show password">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="form-check">
+            <input asp-for="RememberMe" class="form-check-input" />
+            <label asp-for="RememberMe" class="form-check-label" style="font-size:.85rem"></label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2">
+        <i class="bi bi-box-arrow-in-right me-1"></i> Sign in
+    </button>
+</form>
+
+<div class="text-center mt-4" style="font-size:.87rem">
+    Don't have an account?
+    <a asp-action="Register" class="fw-semibold">Create one</a>
+</div>
+
+<div class="mt-4 p-3 rounded" style="background:#F8FAFC;border:1px solid #E2E8F0;font-size:.78rem;color:#475569">
+    <div class="fw-semibold mb-1"><i class="bi bi-info-circle me-1"></i>Demo accounts</div>
+    <div>Administrator — <code>admin</code> / <code>Admin@@12345</code></div>
+    <div>Standard user — <code>demo</code> / <code>Demo@@12345</code></div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,215 @@
+@model HabitTracker.Web.ViewModels.DailyTrackerViewModel
+@{
+    ViewData["Title"] = "Daily tracker";
+    var isToday = Model.Date == Model.Today;
+    var prev = Model.Date.AddDays(-1);
+    var next = Model.Date.AddDays(1);
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Daily tracker</h1>
+        <p>@Model.Date.ToString("dddd, dd MMMM yyyy")@(isToday ? " · Today" : "")</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-date="@prev.ToString("yyyy-MM-dd")" aria-label="Previous day">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <input type="date" class="form-control form-control-sm" id="trackerDate" style="width:160px"
+               value="@Model.Date.ToString("yyyy-MM-dd")" max="@Model.Today.ToString("yyyy-MM-dd")" aria-label="Select date" />
+        <a class="btn btn-outline-secondary btn-sm @(Model.Date >= Model.Today ? "disabled" : "")"
+           asp-action="Index" asp-route-date="@next.ToString("yyyy-MM-dd")" aria-label="Next day">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+        @if (!isToday)
+        {
+            <a class="btn btn-primary btn-sm" asp-action="Index">Today</a>
+        }
+    </div>
+</div>
+
+@if (Model.IsFuture)
+{
+    <div class="alert alert-info d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>This date is in the future. You can view the schedule, but records can only be saved for today or earlier.</div>
+    </div>
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#1D4ED8;--stat-bg:#EFF6FF">
+            <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-value">@Model.ScheduledCount</div>
+            <div class="stat-label">Scheduled</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#16A34A;--stat-bg:#F0FDF4">
+            <div class="stat-icon"><i class="bi bi-check2-all"></i></div>
+            <div class="stat-value">@Model.CompletedCount</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#F59E0B;--stat-bg:#FFFBEB">
+            <div class="stat-icon"><i class="bi bi-slash-circle"></i></div>
+            <div class="stat-value">@Model.SkippedCount</div>
+            <div class="stat-label">Skipped</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#7C3AED;--stat-bg:#F5F3FF">
+            <div class="stat-icon"><i class="bi bi-speedometer2"></i></div>
+            <div class="stat-value">@Model.CompletionRate.ToString("0.#")%</div>
+            <div class="stat-label">Completion</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list-check text-primary"></i><span>Habits scheduled for this day</span>
+        <span class="badge badge-soft badge-soft-primary ms-auto">@Model.PendingCount pending</span>
+    </div>
+    <div class="card-body">
+        @if (Model.ScheduledCount == 0)
+        {
+            <div class="empty-state">
+                <i class="bi bi-calendar-x"></i>
+                <h3>No habits scheduled</h3>
+                <p>Nothing is scheduled for this date. Adjust a habit's schedule or create a new habit.</p>
+                <a class="btn btn-primary btn-sm" asp-controller="Habits" asp-action="Create">Create a habit</a>
+            </div>
+        }
+        else
+        {
+            <div class="progress mb-3" role="progressbar" aria-valuenow="@Model.CompletionRate" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-success" style="width:@Model.CompletionRate%"></div>
+            </div>
+
+            @foreach (var item in Model.Items)
+            {
+                var rowClass = item.Status == HabitLogStatus.Completed ? "is-done"
+                             : item.Status == HabitLogStatus.Skipped ? "is-skipped" : "";
+                <div class="habit-row @rowClass">
+                    <span class="habit-icon" style="background:@item.Color"><i class="bi @item.Icon"></i></span>
+
+                    <div class="flex-grow-1" style="min-width:0">
+                        <p class="habit-name text-truncate">@item.Name</p>
+                        <div class="habit-meta">
+                            <span><i class="bi bi-tag me-1"></i>@item.CategoryName</span>
+                            <span><i class="bi bi-bullseye me-1"></i>Target @item.TargetPerPeriod</span>
+                            @if (item.CurrentStreak > 0)
+                            {
+                                <span class="streak-pill"><i class="bi bi-fire"></i>@item.CurrentStreak</span>
+                            }
+                            @if (item.Status == HabitLogStatus.Completed)
+                            {
+                                <span class="badge badge-soft badge-soft-success">Completed</span>
+                            }
+                            else if (item.Status == HabitLogStatus.Skipped)
+                            {
+                                <span class="badge badge-soft badge-soft-warning">Skipped</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(item.Notes))
+                        {
+                            <div class="text-muted mt-1" style="font-size:.76rem"><i class="bi bi-chat-left-text me-1"></i>@item.Notes</div>
+                        }
+                    </div>
+
+                    <div class="habit-actions d-flex flex-wrap gap-1 align-items-center">
+                        @if (Model.IsEditable)
+                        {
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#recordModal"
+                                    data-habit-id="@item.HabitId" data-habit-name="@item.Name"
+                                    data-status="0" data-notes="@item.Notes">
+                                <i class="bi bi-check-lg"></i><span class="d-none d-sm-inline ms-1">Complete</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#recordModal"
+                                    data-habit-id="@item.HabitId" data-habit-name="@item.Name"
+                                    data-status="1" data-notes="@item.Notes">
+                                <i class="bi bi-slash-circle"></i><span class="d-none d-sm-inline ms-1">Skip</span>
+                            </button>
+                            @if (item.Status is not null)
+                            {
+                                <form asp-action="Clear" method="post" data-confirm="Clear the record for '@item.Name' on this date?">
+                                    <input type="hidden" name="habitId" value="@item.HabitId" />
+                                    <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Clear record">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge badge-soft badge-soft-muted">Read only</span>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Record modal -->
+<div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="recordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Record" method="post" data-tracker-form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recordModalLabel">Record habit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="habitId" id="modalHabitId" />
+                    <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="status" id="modalStatus" />
+
+                    <p class="mb-3" style="font-size:.9rem">
+                        <strong id="modalHabitName"></strong>
+                        <span class="text-muted">on @Model.Date.ToString("dd MMM yyyy")</span>
+                    </p>
+
+                    <div class="mb-2">
+                        <label class="form-label" for="modalNotes">Notes (optional)</label>
+                        <textarea class="form-control" name="notes" id="modalNotes" rows="3" maxlength="500"
+                                  placeholder="How did it go?"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modalSubmit">Save record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var modal = document.getElementById('recordModal');
+        if (!modal) return;
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            if (!button) return;
+
+            var status = button.getAttribute('data-status');
+            document.getElementById('modalHabitId').value = button.getAttribute('data-habit-id');
+            document.getElementById('modalHabitName').textContent = button.getAttribute('data-habit-name');
+            document.getElementById('modalStatus').value = status;
+            document.getElementById('modalNotes').value = button.getAttribute('data-notes') || '';
+
+            var submit = document.getElementById('modalSubmit');
+            submit.className = status === '0' ? 'btn btn-success' : 'btn btn-warning';
+            submit.textContent = status === '0' ? 'Mark completed' : 'Mark skipped';
+        });
+    })();
+</script>
+}

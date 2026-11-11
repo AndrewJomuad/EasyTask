@@ -1,0 +1,131 @@
+@model HabitTracker.Web.ViewModels.AdminUsersViewModel
+@{
+    ViewData["Title"] = "User management";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Users</h1>
+        <p>@Model.TotalUsers accounts · @Model.ActiveUsers active · @Model.AdminUsers administrators</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#1D4ED8;--stat-bg:#EFF6FF">
+            <div class="stat-value">@Model.TotalUsers</div><div class="stat-label">Total accounts</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#16A34A;--stat-bg:#F0FDF4">
+            <div class="stat-value">@Model.ActiveUsers</div><div class="stat-label">Active</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#7C3AED;--stat-bg:#F5F3FF">
+            <div class="stat-value">@Model.AdminUsers</div><div class="stat-label">Administrators</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="--stat-color:#0EA5E9;--stat-bg:#F0F9FF">
+            <div class="stat-value">@Model.NewThisMonth</div><div class="stat-label">New this month</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="search">Search</label>
+                <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Name, username or email" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="role">Role</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">All roles</option>
+                    <option value="@AppRoles.Admin" selected="@(Model.Role == AppRoles.Admin)">Administrator</option>
+                    <option value="@AppRoles.User" selected="@(Model.Role == AppRoles.User)">User</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All</option>
+                    <option value="active" selected="@(Model.Status == "active")">Active</option>
+                    <option value="inactive" selected="@(Model.Status == "inactive")">Inactive</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        @if (Model.Users.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="bi bi-people"></i>
+                <h3>No users match</h3>
+                <p>Adjust the filters to see more accounts.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>User</th><th>Role</th><th>Status</th>
+                            <th class="text-center">Habits</th><th class="text-center">Records</th>
+                            <th>Last sign-in</th><th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@row.User.FullName</div>
+                                    <div class="text-muted" style="font-size:.74rem">@@@row.User.UserName · @row.User.Email</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft @(row.Role == AppRoles.Admin ? "badge-soft-primary" : "badge-soft-muted")">@row.Role</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft @(row.User.IsActive ? "badge-soft-success" : "badge-soft-danger")">
+                                        @(row.User.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td class="text-center">@row.HabitCount</td>
+                                <td class="text-center">@row.LogCount</td>
+                                <td class="text-muted text-nowrap" style="font-size:.78rem">
+                                    @(row.LastActivity?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "Never")
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@row.User.Id" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@row.User.Id" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="ToggleActive" method="post" asp-route-id="@row.User.Id" class="d-inline"
+                                          data-confirm="@(row.User.IsActive ? "Deactivate" : "Activate") this account?">
+                                        <button type="submit" class="btn btn-sm btn-outline-@(row.User.IsActive ? "warning" : "success")"
+                                                title="@(row.User.IsActive ? "Deactivate" : "Activate")">
+                                            <i class="bi @(row.User.IsActive ? "bi-pause" : "bi-play")"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

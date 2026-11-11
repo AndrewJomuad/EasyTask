@@ -1,0 +1,73 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · HTMS</title>
+    <link rel="icon" href="~/favicon.ico" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="auth-wrap">
+    <aside class="auth-aside">
+        <div>
+            <a asp-controller="Home" asp-action="Index" class="d-inline-flex align-items-center gap-2 text-white mb-5">
+                <span class="htms-brand-mark"><i class="bi bi-check2-square"></i></span>
+                <span class="htms-brand-text">
+                    <strong>HTMS</strong>
+                    <span>Habit Tracker</span>
+                </span>
+            </a>
+
+            <h2>Build better habits,<br />one day at a time.</h2>
+            <p class="mb-4">Plan your routines, record daily progress, and watch your streaks grow with clear analytics and motivating rewards.</p>
+
+            <div class="auth-feature">
+                <i class="bi bi-calendar-check"></i>
+                <div><strong>Daily tracking &amp; calendar</strong><span>See exactly what is scheduled and what you completed.</span></div>
+            </div>
+            <div class="auth-feature">
+                <i class="bi bi-graph-up-arrow"></i>
+                <div><strong>Streaks &amp; analytics</strong><span>Completion rates, habit comparisons and trend charts.</span></div>
+            </div>
+            <div class="auth-feature">
+                <i class="bi bi-trophy"></i>
+                <div><strong>Achievements &amp; points</strong><span>Earn badges and track every reward transaction.</span></div>
+            </div>
+            <div class="auth-feature">
+                <i class="bi bi-file-earmark-arrow-down"></i>
+                <div><strong>PDF &amp; Excel reports</strong><span>Export professional progress reports in one click.</span></div>
+            </div>
+        </div>
+
+        <div class="small" style="color:rgba(255,255,255,.6)">
+            &copy; @DateTime.Now.Year Habit Tracking Management System
+        </div>
+    </aside>
+
+    <section class="auth-panel">
+        <div class="auth-card">
+            @if (TempData["Success"] is string success)
+            {
+                <div class="alert alert-success" role="status">@success</div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger" role="alert">@error</div>
+            }
+            @RenderBody()
+        </div>
+    </section>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

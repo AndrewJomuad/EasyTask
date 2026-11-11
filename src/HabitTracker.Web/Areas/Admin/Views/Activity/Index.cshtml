@@ -1,0 +1,99 @@
+@model HabitTracker.Web.ViewModels.AdminActivityViewModel
+@{
+    ViewData["Title"] = "Activity logs";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Activity logs</h1>
+        <p>@Model.TotalCount entries · page @Model.Page of @Model.TotalPages</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="search">Search</label>
+                <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Action, details or user" />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="action">Action</label>
+                <select class="form-select" id="action" name="action">
+                    <option value="">All actions</option>
+                    @foreach (var a in Model.Actions)
+                    {
+                        <option value="@a" selected="@(Model.Action == a)">@a</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="from">From</label>
+                <input class="form-control" type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="to">To</label>
+                <input class="form-control" type="date" id="to" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-6 col-md-1">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        @if (Model.Logs.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="bi bi-clock-history"></i>
+                <h3>No activity found</h3>
+                <p>Adjust the filters to see more entries.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr><th>When</th><th>User</th><th>Action</th><th>Details</th><th>IP</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.Logs)
+                        {
+                            <tr>
+                                <td class="text-nowrap text-muted" style="font-size:.8rem">@log.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm:ss")</td>
+                                <td>
+                                    <div style="font-size:.84rem">@(log.User?.UserName ?? "system")</div>
+                                    <div class="text-muted" style="font-size:.72rem">@(log.User?.FullName ?? "—")</div>
+                                </td>
+                                <td><span class="badge badge-soft badge-soft-primary">@log.Action</span></td>
+                                <td class="text-muted" style="font-size:.8rem">@log.Details</td>
+                                <td class="text-muted" style="font-size:.75rem">@(log.IpAddress ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span class="text-muted" style="font-size:.8rem">Page @Model.Page of @Model.TotalPages</span>
+            <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")"
+                   asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search"
+                   asp-route-action="@Model.Action" asp-route-from="@Model.From?.ToString("yyyy-MM-dd")" asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">
+                    <i class="bi bi-chevron-left"></i> Previous
+                </a>
+                <a class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.TotalPages ? "disabled" : "")"
+                   asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search"
+                   asp-route-action="@Model.Action" asp-route-from="@Model.From?.ToString("yyyy-MM-dd")" asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">
+                    Next <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    }
+</div>

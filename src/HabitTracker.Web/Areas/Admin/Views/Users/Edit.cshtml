@@ -1,0 +1,93 @@
+@model HabitTracker.Web.ViewModels.AdminUserEditViewModel
+@{
+    ViewData["Title"] = "Edit user";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Edit user</h1>
+        <p>@Model.FullName · @Model.Email</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back to users</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" method="post" novalidate>
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="UserName" class="form-label"></label>
+                            <input asp-for="UserName" class="form-control" />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label"></label>
+                            <select asp-for="Role" class="form-select">
+                                <option value="@AppRoles.User" selected="@(Model.Role == AppRoles.User)">User</option>
+                                <option value="@AppRoles.Admin" selected="@(Model.Role == AppRoles.Admin)">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="NewPassword" class="form-label"></label>
+                            <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                            <div class="form-text">Leave blank to keep the current password. Minimum 8 characters with mixed case, a digit and a symbol.</div>
+                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input asp-for="IsActive" class="form-check-input" role="switch" />
+                        <label asp-for="IsActive" class="form-check-label" style="font-size:.88rem">Account is active</label>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Save changes</button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle text-primary"></i><span>Account summary</span></div>
+            <div class="card-body" style="font-size:.86rem">
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">Created</span><span>@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                </div>
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">Last sign-in</span><span>@(Model.LastLoginAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "Never")</span>
+                </div>
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">Points</span><span class="fw-semibold">@Model.TotalPoints</span>
+                </div>
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">Habits</span><span class="fw-semibold">@Model.HabitCount</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Records</span><span class="fw-semibold">@Model.LogCount</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

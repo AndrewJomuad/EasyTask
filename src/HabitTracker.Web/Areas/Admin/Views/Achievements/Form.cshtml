@@ -1,0 +1,76 @@
+@model HabitTracker.Web.ViewModels.AchievementFormViewModel
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit achievement" : "New achievement";
+}
+
+<div class="htms-page-head">
+    <div><h1>@(isEdit ? "Edit achievement" : "New achievement")</h1><p>Define the badge criteria and reward.</p></div>
+    <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Save" method="post" novalidate>
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g. Week Warrior" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Criteria" class="form-label"></label>
+                            <select asp-for="Criteria" class="form-select">
+                                <option value="0" selected="@(Model.Criteria == AchievementCriteria.TotalPoints)">Total points earned</option>
+                                <option value="1" selected="@(Model.Criteria == AchievementCriteria.TotalCompletions)">Total habit completions</option>
+                                <option value="2" selected="@(Model.Criteria == AchievementCriteria.CurrentStreak)">Current streak (days)</option>
+                                <option value="3" selected="@(Model.Criteria == AchievementCriteria.LongestStreak)">Longest streak (days)</option>
+                                <option value="4" selected="@(Model.Criteria == AchievementCriteria.PerfectDays)">Perfect days</option>
+                                <option value="5" selected="@(Model.Criteria == AchievementCriteria.ActiveHabits)">Active habits</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="2" placeholder="What does this badge celebrate?"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="PointsRequired" class="form-label"></label>
+                            <input asp-for="PointsRequired" class="form-control" type="number" min="1" max="100000" />
+                            <div class="form-text">The value the criterion must reach.</div>
+                            <span asp-validation-for="PointsRequired" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Color" class="form-label"></label>
+                            <input asp-for="Color" class="form-control form-control-color w-100" type="color" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Icon" class="form-label"></label>
+                            <input asp-for="Icon" class="form-control" placeholder="bi-trophy" />
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" role="switch" />
+                                <label asp-for="IsActive" class="form-check-label" style="font-size:.88rem">Active</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>@(isEdit ? "Save changes" : "Create")</button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

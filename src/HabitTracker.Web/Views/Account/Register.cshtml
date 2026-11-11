@@ -1,0 +1,67 @@
+@model HabitTracker.Web.ViewModels.RegisterViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Create account";
+}
+
+<h1>Create your account</h1>
+<p class="lead">Start building better habits in under a minute.</p>
+
+<form asp-action="Register" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" autocomplete="name" placeholder="Jane Doe" autofocus />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="row g-2">
+        <div class="col-sm-6 mb-3">
+            <label asp-for="UserName" class="form-label"></label>
+            <input asp-for="UserName" class="form-control" autocomplete="username" placeholder="janedoe" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+        <div class="col-sm-6 mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" placeholder="jane@example.com" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <div class="input-group">
+            <input asp-for="Password" class="form-control" autocomplete="new-password" placeholder="At least 8 characters" />
+            <button class="btn btn-outline-secondary" type="button" data-toggle-password="#Password" aria-label="Show password">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+        <div class="form-text">Use 8+ characters with upper and lower case, a digit and a symbol.</div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" placeholder="Repeat your password" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="AcceptTerms" class="form-check-input" />
+        <label asp-for="AcceptTerms" class="form-check-label" style="font-size:.85rem"></label>
+        <span asp-validation-for="AcceptTerms" class="text-danger d-block"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2">
+        <i class="bi bi-person-plus me-1"></i> Create account
+    </button>
+</form>
+
+<div class="text-center mt-4" style="font-size:.87rem">
+    Already registered? <a asp-action="Login" class="fw-semibold">Sign in</a>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

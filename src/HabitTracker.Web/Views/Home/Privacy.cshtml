@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Privacy";
+}
+<div class="htms-page-head">
+    <div><h1>Privacy</h1><p>How HTMS handles your data.</p></div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <p>HTMS stores only the information required to operate your habit tracking account: your name, username,
+            email address, hashed password, habits, schedules, daily records, reminders, achievements and points ledger.</p>
+        <p>Passwords are hashed by ASP.NET Core Identity and are never stored or displayed in plain text.
+            Every habit query is filtered by the authenticated user, so one account cannot read another account's data.</p>
+        <p>Administrators can view account metadata and activity logs for support and audit purposes.
+            You may request deletion of your account from an administrator.</p>
+    </div>
+</div>

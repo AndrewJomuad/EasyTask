@@ -1,0 +1,124 @@
+@model HabitTracker.Web.ViewModels.ReminderListViewModel
+@{
+    ViewData["Title"] = "Reminders";
+}
+
+<div class="htms-page-head">
+    <div>
+        <h1>Reminders</h1>
+        <p>@Model.EnabledCount enabled · @Model.DisabledCount disabled</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New reminder</a>
+</div>
+
+@if (Model.DueNow.Count > 0)
+{
+    <div class="alert alert-warning">
+        <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-bell-fill mt-1"></i>
+            <div>
+                <strong>Due now</strong>
+                <ul class="mb-0 mt-1 ps-3">
+                    @foreach (var due in Model.DueNow)
+                    {
+                        <li>@due.HabitName at @due.Reminder.ReminderTime.ToString("HH:mm")</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-bell text-primary"></i><span>Configured reminders</span></div>
+    <div class="card-body p-0">
+        @if (Model.Reminders.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="bi bi-bell-slash"></i>
+                <h3>No reminders yet</h3>
+                <p>Add a reminder so you do not forget a scheduled habit.</p>
+                <a class="btn btn-primary btn-sm" asp-action="Create">Create a reminder</a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Habit</th><th>Time</th><th>Repeat</th><th>Today</th><th>Status</th><th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Reminders)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="habit-icon" style="background:@row.HabitColor;width:32px;height:32px;flex:0 0 32px;font-size:.9rem">
+                                            <i class="bi @row.HabitIcon"></i>
+                                        </span>
+                                        <span class="fw-semibold">@row.HabitName</span>
+                                    </div>
+                                </td>
+                                <td class="text-nowrap"><i class="bi bi-clock me-1 text-muted"></i>@row.Reminder.ReminderTime.ToString("HH:mm")</td>
+                                <td class="text-muted">@row.Reminder.RepeatType</td>
+                                <td>
+                                    @if (!row.ScheduledToday)
+                                    {
+                                        <span class="badge badge-soft badge-soft-muted">Not scheduled</span>
+                                    }
+                                    else if (row.CompletedToday)
+                                    {
+                                        <span class="badge badge-soft badge-soft-success">Completed</span>
+                                    }
+                                    else if (row.IsDue)
+                                    {
+                                        <span class="badge badge-soft badge-soft-warning">Due now</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-soft badge-soft-primary">Pending</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft @(row.Reminder.IsEnabled ? "badge-soft-success" : "badge-soft-muted")">
+                                        @(row.Reminder.IsEnabled ? "Enabled" : "Disabled")
+                                    </span>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@row.Reminder.Id" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Toggle" method="post" asp-route-id="@row.Reminder.Id" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Toggle">
+                                            <i class="bi @(row.Reminder.IsEnabled ? "bi-pause" : "bi-play")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="Delete" method="post" asp-route-id="@row.Reminder.Id" class="d-inline"
+                                          data-confirm="Delete this reminder?">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body d-flex gap-2 align-items-start">
+        <i class="bi bi-info-circle text-primary mt-1"></i>
+        <div style="font-size:.84rem" class="text-muted">
+            Reminders are evaluated while you are signed in. A reminder is shown on the dashboard and here when its time
+            has passed within the configured window, the habit is scheduled for today, and it has not been completed yet.
+            Completed habits never produce a reminder.
+        </div>
+    </div>
+</div>
